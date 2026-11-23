@@ -15,8 +15,18 @@ jobs:
         id: proj
         run: |
           f=$(find . -name settings.gradle.kts -not -path "*/build/*" | head -1)
+          # Project uploaded as a .zip archive? Unpack it.
           if [ -z "$f" ]; then
-            echo "::error::settings.gradle.kts not found. Upload the whole project (settings.gradle.kts, build.gradle.kts, gradle.properties, app/...)"
+            z=$(find . -name "*.zip" -not -path "./.git/*" | head -1)
+            if [ -n "$z" ]; then
+              echo "Unpacking $z"
+              unzip -q -o "$z" -d unpacked
+              f=$(find ./unpacked -name settings.gradle.kts -not -path "*/build/*" | head -1)
+            fi
+          fi
+          if [ -z "$f" ]; then
+            echo "Files in repository:"; find . -not -path "./.git/*" -type f | head -50
+            echo "::error::Project not found. Upload Kaliandar.zip (or the project files) to the repository"
             exit 1
           fi
           dir=$(dirname "$f")
